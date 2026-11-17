@@ -48,10 +48,11 @@ export const Spatial3DShowcaseSection: React.FC<Spatial3DShowcaseProps> = ({
   const [, setModelLoaded] = useState(false);
 
   // Three.js internal references
-  const modelRef = useRef<THREE.Group | null>(null);
+  const pivotGroupRef = useRef<THREE.Group | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const maxDimRef = useRef<number>(1);
 
   useEffect(() => {
     const mount = canvasMountRef.current;
@@ -68,6 +69,11 @@ export const Spatial3DShowcaseSection: React.FC<Spatial3DShowcaseProps> = ({
 
     const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
     cameraRef.current = camera;
+
+    // Root pivot group to ensure tumbling happens cleanly around the model's true center of mass
+    const pivotGroup = new THREE.Group();
+    pivotGroupRef.current = pivotGroup;
+    scene.add(pivotGroup);
 
     // 2. High-Performance WebGL Renderer (ACES Filmic Tone Mapping Exposure 2.4)
     const getPixelRatio = () =>
@@ -120,7 +126,6 @@ export const Spatial3DShowcaseSection: React.FC<Spatial3DShowcaseProps> = ({
       '/models/chair.glb',
       (gltf) => {
         const model = gltf.scene;
-        modelRef.current = model;
 
         // Traverse mesh and calibrate PBR metallic finish (step 9796 original)
         model.traverse((node) => {
@@ -138,24 +143,26 @@ export const Spatial3DShowcaseSection: React.FC<Spatial3DShowcaseProps> = ({
           }
         });
 
-        // Center model in local origin
+        // Center model inside pivotGroup so all rotations occur around the geometric centroid
         const box = new THREE.Box3().setFromObject(model);
         const center = box.getCenter(new THREE.Vector3());
-        model.position.sub(center);
-
-        // Normalize scale and camera distance (matching script.js with portrait mobile calibration)
         const size = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
-        const isMobileInit = window.innerWidth < 768;
-        camera.position.z = maxDim * (isMobileInit ? 3.1 : 1.7);
+        maxDimRef.current = maxDim;
 
-        model.scale.set(0, 0, 0);
-        model.rotation.set(0, 0.5, 0);
-        scene.add(model);
+        model.position.set(-center.x, -center.y, -center.z);
+        pivotGroup.add(model);
+
+        // Normalize scale and camera distance (calibrated for mobile portrait window vs desktop)
+        const isMobileInit = window.innerWidth < 768;
+        camera.position.z = maxDim * (isMobileInit ? 2.5 : 1.7);
+
+        pivotGroup.scale.set(0, 0, 0);
+        pivotGroup.rotation.set(0, 0.5, 0);
         setModelLoaded(true);
 
         // Entrance scale animation
-        gsap.to(model.scale, {
+        gsap.to(pivotGroup.scale, {
           x: 1,
           y: 1,
           z: 1,
@@ -190,12 +197,8 @@ export const Spatial3DShowcaseSection: React.FC<Spatial3DShowcaseProps> = ({
       const h = window.innerHeight;
       camera.aspect = w / h;
       const isMob = w < 768;
-      if (modelRef.current) {
-        const box = new THREE.Box3().setFromObject(modelRef.current);
-        const size = box.getSize(new THREE.Vector3());
-        const maxDim = Math.max(size.x, size.y, size.z);
-        camera.position.z = maxDim * (isMob ? 3.1 : 1.7);
-      }
+      const maxDim = maxDimRef.current;
+      camera.position.z = maxDim * (isMob ? 2.5 : 1.7);
       camera.updateProjectionMatrix();
       renderer.setPixelRatio(getPixelRatio());
       renderer.setSize(w, h);
@@ -212,16 +215,16 @@ export const Spatial3DShowcaseSection: React.FC<Spatial3DShowcaseProps> = ({
         setScrollProgress(smoothScrollProgress);
       }
 
-      if (modelRef.current) {
-        const model = modelRef.current;
+      if (pivotGroupRef.current) {
+        const pivot = pivotGroupRef.current;
         // Sinusoidal vertical floating
         const floatOffset = Math.sin(Date.now() * 0.001 * floatSpeed) * floatAmplitude;
-        model.position.y = floatOffset;
+        pivot.position.y = floatOffset;
 
-        // Scroll progress drives 3D tumbling rotation (exact formula from step 9796 original)
+        // Scroll progress drives 3D tumbling rotation around centroid (exact original formula)
         const baseTilt = 0.45;
-        model.rotation.x = smoothScrollProgress * Math.PI * 4 + baseTilt;
-        model.rotation.y = smoothScrollProgress * Math.PI * 2.2 + 0.35;
+        pivot.rotation.x = smoothScrollProgress * Math.PI * 4 + baseTilt;
+        pivot.rotation.y = smoothScrollProgress * Math.PI * 2.2 + 0.35;
       }
 
       renderer.render(scene, camera);
@@ -245,8 +248,8 @@ export const Spatial3DShowcaseSection: React.FC<Spatial3DShowcaseProps> = ({
       className="relative w-full bg-[#000000] text-white select-none"
       style={{ height: '350vh' }}
     >
-      {/* Sticky Viewport Container: Pinned 100vh window while user scrolls through 350vh */}
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-between">
+      {/* Sticky Viewport Container: Pinned 100vh / 100dvh window while user scrolls through 350vh */}
+      <div className="sticky top-0 h-[100dvh] min-h-screen w-full overflow-hidden flex flex-col justify-between">
         
         {/* Fullscreen 3D Model Mount (Fixed in Center, exact replica of video) */}
         <div
@@ -263,19 +266,21 @@ export const Spatial3DShowcaseSection: React.FC<Spatial3DShowcaseProps> = ({
             STAGE 1: INTRO (Active from 0% to 32% scroll) - Monumental Typography
            ========================================================================= */}
         <div
-          className="absolute inset-0 z-20 flex flex-col justify-center px-6 sm:px-12 md:px-20 transition-all duration-700 pointer-events-none"
+          className="absolute inset-0 z-20 flex flex-col justify-between sm:justify-center px-6 sm:px-12 md:px-20 pt-24 pb-12 sm:pt-0 sm:pb-0 transition-all duration-700 pointer-events-none"
           style={{
             opacity: scrollProgress < 0.32 ? 1 - scrollProgress * 2.8 : 0,
             transform: `translateY(${-scrollProgress * 140}px)`,
             display: scrollProgress > 0.38 ? 'none' : 'flex',
           }}
         >
+          {/* Top Block: Mobile gets SPACES FOR + FUTURE; Desktop gets 3-line layout */}
           <div className="flex flex-col gap-0 select-none">
-            <h1 className="text-[14vw] sm:text-[13vw] md:text-[11vw] font-normal uppercase leading-[0.85] tracking-tighter text-white font-['Anton',sans-serif]">
+            <h1 className="text-[13vw] sm:text-[13vw] md:text-[11vw] font-normal uppercase leading-[0.85] tracking-tighter text-white font-['Anton',sans-serif]">
               SPACES FOR
             </h1>
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-6 my-1 sm:my-2">
+            {/* Desktop Row: FUTURE on left, Paragraph on right */}
+            <div className="hidden sm:flex sm:flex-row sm:items-center justify-between gap-2 sm:gap-6 my-1 sm:my-2">
               <h1 className="text-[13vw] sm:text-[13vw] md:text-[11vw] font-normal uppercase leading-[0.85] tracking-tighter text-white font-['Anton',sans-serif]">
                 FUTURE
               </h1>
@@ -284,7 +289,23 @@ export const Spatial3DShowcaseSection: React.FC<Spatial3DShowcaseProps> = ({
               </p>
             </div>
 
-            <h1 className="text-[14vw] sm:text-[13vw] md:text-[11vw] font-normal uppercase leading-[0.85] tracking-tighter text-white font-['Anton',sans-serif]">
+            {/* Mobile-Only Top Second Line: FUTURE */}
+            <h1 className="text-[13vw] font-normal uppercase leading-[0.85] tracking-tighter text-white font-['Anton',sans-serif] sm:hidden mt-1">
+              FUTURE
+            </h1>
+
+            {/* Desktop-Only Third Line: LIVING HERE */}
+            <h1 className="hidden sm:block text-[13vw] sm:text-[13vw] md:text-[11vw] font-normal uppercase leading-[0.85] tracking-tighter text-white font-['Anton',sans-serif]">
+              LIVING HERE
+            </h1>
+          </div>
+
+          {/* Mobile-Only Bottom Anchor: Paragraph + LIVING HERE */}
+          <div className="flex sm:hidden flex-col gap-2 select-none">
+            <p className="max-w-xs text-[11px] uppercase tracking-wider text-zinc-400 font-mono leading-relaxed">
+              {t('spatial.stage1_p')}
+            </p>
+            <h1 className="text-[13vw] font-normal uppercase leading-[0.85] tracking-tighter text-white font-['Anton',sans-serif]">
               LIVING HERE
             </h1>
           </div>
@@ -294,7 +315,7 @@ export const Spatial3DShowcaseSection: React.FC<Spatial3DShowcaseProps> = ({
             STAGE 2: ARCHIVE / COLLECTION (Active from 33% to 70% scroll)
            ========================================================================= */}
         <div
-          className="absolute inset-0 z-20 flex flex-col justify-center items-center text-center px-6 transition-all duration-700 pointer-events-none"
+          className="absolute inset-0 z-20 flex flex-col justify-center items-center text-center px-6 pt-16 sm:pt-0 transition-all duration-700 pointer-events-none"
           style={{
             opacity:
               scrollProgress >= 0.32 && scrollProgress <= 0.72
@@ -304,14 +325,14 @@ export const Spatial3DShowcaseSection: React.FC<Spatial3DShowcaseProps> = ({
             display: scrollProgress < 0.28 || scrollProgress > 0.76 ? 'none' : 'flex',
           }}
         >
-          <div className="mb-6 select-none">
-            <span className="text-xs sm:text-sm font-mono uppercase tracking-[0.3em] text-[#38BDF8]">
+          <div className="mb-4 sm:mb-6 select-none">
+            <span className="text-[10px] sm:text-sm font-mono uppercase tracking-[0.3em] text-[#38BDF8]">
               {t('spatial.stage2_badge')}
             </span>
           </div>
 
           {/* Dynamic Cycling Archive List - Mobile Responsive Hierarchy */}
-          <div className="flex flex-col gap-2.5 sm:gap-7 w-full max-w-4xl select-none">
+          <div className="flex flex-col gap-2 sm:gap-7 w-full max-w-4xl select-none">
             {ARCHIVE_ITEMS.map((item, idx) => {
               const isCurrent =
                 idx ===
@@ -323,9 +344,9 @@ export const Spatial3DShowcaseSection: React.FC<Spatial3DShowcaseProps> = ({
               return (
                 <div key={item.name} className="flex flex-col items-center">
                   <h2
-                    className={`text-2xl sm:text-5xl md:text-7xl font-light tracking-tight transition-all duration-300 ${
+                    className={`text-lg sm:text-5xl md:text-7xl font-light tracking-tight whitespace-nowrap transition-all duration-300 ${
                       isCurrent
-                        ? 'text-white scale-105 drop-shadow-[0_0_30px_rgba(255,255,255,0.4)]'
+                        ? 'text-white scale-105 drop-shadow-[0_0_30px_rgba(255,255,255,0.7)]'
                         : 'text-zinc-600/70 scale-95'
                     }`}
                   >
@@ -333,7 +354,7 @@ export const Spatial3DShowcaseSection: React.FC<Spatial3DShowcaseProps> = ({
                   </h2>
                   <div className="flex items-center justify-center gap-2 sm:gap-6 mt-0.5 sm:mt-1 text-[9px] sm:text-xs font-mono uppercase tracking-wider text-zinc-500">
                     {item.info.map((inf, iIdx) => (
-                      <span key={iIdx} className={isCurrent ? 'text-zinc-300' : ''}>
+                      <span key={iIdx} className={isCurrent ? 'text-zinc-200' : ''}>
                         {inf}
                       </span>
                     ))}
@@ -356,7 +377,7 @@ export const Spatial3DShowcaseSection: React.FC<Spatial3DShowcaseProps> = ({
           }}
         >
           <div className="max-w-4xl select-none">
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-light uppercase tracking-tight text-white leading-tight font-['Anton',sans-serif]">
+            <h2 className="text-xl sm:text-4xl md:text-5xl font-light uppercase tracking-tight text-white leading-tight font-['Anton',sans-serif]">
               {t('spatial.stage3_h2')}
             </h2>
           </div>
