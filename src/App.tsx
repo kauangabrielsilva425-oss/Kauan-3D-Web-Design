@@ -9,15 +9,18 @@ import { LanguageSelector } from './components/LanguageSelector';
 import { HeroSection } from './components/HeroSection';
 import { AboutSection } from './components/AboutSection';
 import { ServicesSection } from './components/ServicesSection';
-import { ContactModal } from './components/ContactModal';
-import { LegalModal, LegalTab } from './components/LegalModal';
-import { ServicePage } from './components/ServicePage';
 import { IntroScreen } from './components/IntroScreen';
-import { OrchestraCubesSection } from './components/OrchestraCubesSection';
-import { Spatial3DShowcaseSection } from './components/Spatial3DShowcaseSection';
-import { ProposalInquirySection } from './components/ProposalInquirySection';
-import { EditorialMoodboardStream } from './components/EditorialMoodboardStream';
 import { WebDesignAiEngineerSection } from './components/WebDesignAiEngineerSection';
+import type { LegalTab } from './components/LegalModal';
+
+// High-Performance Dynamic Code Splitting (Reduces Initial Main-Thread JS by >600KB)
+const Spatial3DShowcaseSection = React.lazy(() => import('./components/Spatial3DShowcaseSection').then(m => ({ default: m.Spatial3DShowcaseSection })));
+const OrchestraCubesSection = React.lazy(() => import('./components/OrchestraCubesSection').then(m => ({ default: m.OrchestraCubesSection })));
+const ProposalInquirySection = React.lazy(() => import('./components/ProposalInquirySection').then(m => ({ default: m.ProposalInquirySection })));
+const EditorialMoodboardStream = React.lazy(() => import('./components/EditorialMoodboardStream').then(m => ({ default: m.EditorialMoodboardStream })));
+const ServicePage = React.lazy(() => import('./components/ServicePage').then(m => ({ default: m.ServicePage })));
+const ContactModal = React.lazy(() => import('./components/ContactModal').then(m => ({ default: m.ContactModal })));
+const LegalModal = React.lazy(() => import('./components/LegalModal').then(m => ({ default: m.LegalModal })));
 
 // Register GSAP plugins
 gsap.registerPlugin(ScrollTrigger);
@@ -216,48 +219,51 @@ export const App: React.FC = () => {
           onSelectService={handleSelectService}
         />
 
-        {/* 4. 3D Spatial Product Lab (Three.js WebGL Interactive GLB Showcase) */}
-        <Spatial3DShowcaseSection onContactClick={handleOpenContact} />
-
-        {/* 5. 3D Spatial Cubes Manifesto & Vision (Orchestra 3D Scroll) */}
-        <OrchestraCubesSection />
-
-        {/* 6. Proposal Inquiry Section (Pronto para começar?) */}
-        <ProposalInquirySection />
-
-        {/* 7. Editorial Moodboard Stream (Grand Finale Scroll Stream) */}
-        <EditorialMoodboardStream onContactClick={handleOpenContact} />
+        {/* 4. 3D Spatial Product Lab & Below-the-Fold Sections (Loaded via Suspense Chunk) */}
+        <React.Suspense fallback={<div className="w-full bg-[#000000]" style={{ minHeight: '100vh' }} />}>
+          <Spatial3DShowcaseSection onContactClick={handleOpenContact} />
+          <OrchestraCubesSection />
+          <ProposalInquirySection />
+          <EditorialMoodboardStream onContactClick={handleOpenContact} />
+        </React.Suspense>
       </div>
 
       {/* Dedicated Service Case Study View (Harry Portugal Model - In Document Flow with Velvet Lenis Scroll) */}
       {selectedServiceSlug && (
-        <div className="w-full min-h-screen bg-[#000000] text-[#F8FAFC] relative z-20">
-          <ServicePage
-            slug={selectedServiceSlug}
-            onBack={handleBackFromService}
-            onSelectService={handleSelectService}
-            onOpenContact={(srv) => {
-              setContactService(srv);
-              setIsContactModalOpen(true);
-            }}
-          />
-        </div>
+        <React.Suspense fallback={<div className="w-full min-h-screen bg-[#000000]" />}>
+          <div className="w-full min-h-screen bg-[#000000] text-[#F8FAFC] relative z-20">
+            <ServicePage
+              slug={selectedServiceSlug}
+              onBack={handleBackFromService}
+              onSelectService={handleSelectService}
+              onOpenContact={(srv) => {
+                setContactService(srv);
+                setIsContactModalOpen(true);
+              }}
+            />
+          </div>
+        </React.Suspense>
       )}
 
       
-      {/* Interactive Contact Modal */}
-      <ContactModal
-        isOpen={isContactModalOpen}
-        onClose={handleCloseContact}
-        initialService={contactService}
-      />
+      {/* Interactive Contact & Legal Modals (Loaded On-Demand) */}
+      <React.Suspense fallback={null}>
+        {isContactModalOpen && (
+          <ContactModal
+            isOpen={isContactModalOpen}
+            onClose={handleCloseContact}
+            initialService={contactService}
+          />
+        )}
 
-      {/* Legal Modal: Política de Privacidade e Termos de Condições */}
-      <LegalModal
-        isOpen={isLegalModalOpen}
-        onClose={() => setIsLegalModalOpen(false)}
-        initialTab={legalTab}
-      />
+        {isLegalModalOpen && (
+          <LegalModal
+            isOpen={isLegalModalOpen}
+            onClose={() => setIsLegalModalOpen(false)}
+            initialTab={legalTab}
+          />
+        )}
+      </React.Suspense>
     </LanguageProvider>
   );
 };

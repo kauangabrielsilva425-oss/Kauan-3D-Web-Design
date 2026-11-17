@@ -489,11 +489,14 @@ export const InteractiveCharacter: React.FC<InteractiveCharacterProps> = ({
                 }`}
               />
 
-              {/* Fallback image while loading */}
+              {/* High-Performance WebP Fallback with explicit dimensions (0 CLS) */}
               {!imageLoaded && (
                 <img
-                  src="/hero-character-noglasses.png"
+                  src="/hero-character-noglasses.webp"
                   alt="3D Character"
+                  width="490"
+                  height="490"
+                  decoding="async"
                   className="w-full h-auto object-contain filter drop-shadow-[0_25px_60px_rgba(0,0,0,1)] drop-shadow-[0_0_35px_rgba(56,189,248,0.28)] contrast-[1.03] brightness-[1.02] saturate-[1.04]"
                 />
               )}

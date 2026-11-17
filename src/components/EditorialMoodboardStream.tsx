@@ -163,6 +163,8 @@ export const EditorialMoodboardStream: React.FC<EditorialMoodboardStreamProps> =
                 <img
                   src={item.img}
                   alt={item.name}
+                  width="400"
+                  height="260"
                   loading="lazy"
                   decoding="async"
                   className="w-full h-full object-cover filter grayscale contrast-[1.08] brightness-[0.92] group-hover:scale-105 transition-transform duration-700 ease-out"
