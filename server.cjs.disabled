@@ -1,0 +1,54 @@
+const { fork } = require('child_process');
+const path = require('path');
+const fs = require('fs');
+
+const logFile = path.join(__dirname, 'server.log');
+const logStream = fs.openSync(logFile, 'a');
+
+const viteBin = path.join(__dirname, 'node_modules', 'vite', 'bin', 'vite.js');
+let child = null;
+let shuttingDown = false;
+
+function log(msg) {
+  const ts = new Date().toISOString();
+  fs.writeSync(logStream, `[${ts}] ${msg}\n`);
+}
+
+function startVite() {
+  if (shuttingDown) return;
+  log('[SUPERVISOR] Starting Vite server on port 5173...');
+
+  child = fork(viteBin, ['--port', '5173', '--strictPort', '--host'], {
+    cwd: __dirname,
+    stdio: ['ignore', logStream, logStream, 'ipc']
+  });
+
+  child.on('exit', (code, signal) => {
+    log(`[SUPERVISOR] Vite exited with code ${code}, signal ${signal}.`);
+    if (!shuttingDown) {
+      log('[SUPERVISOR] Restarting Vite in 1s...');
+      setTimeout(startVite, 1000);
+    }
+  });
+
+  child.on('error', err => {
+    log(`[SUPERVISOR] Vite process error: ${err.message}`);
+  });
+}
+
+process.on('SIGINT', () => {
+  shuttingDown = true;
+  if (child) child.kill('SIGINT');
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  shuttingDown = true;
+  if (child) child.kill('SIGTERM');
+  process.exit(0);
+});
+
+startVite();
+
+// Keep process alive indefinitely
+setInterval(() => {}, 60000);

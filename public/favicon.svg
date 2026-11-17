@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Rounded Dark Base Badge for maximum contrast on light and dark browser tabs -->
+  <rect width="64" height="64" rx="16" fill="#050507" />
+  <rect width="64" height="64" rx="16" stroke="rgba(255,255,255,0.14)" stroke-width="1.5" />
+  
+  <!-- Subtle Cyan Accent Glow -->
+  <circle cx="32" cy="32" r="16" fill="#38BDF8" opacity="0.22" filter="blur(6px)" />
+
+  <!-- 3D Faceted Diamond Geometry -->
+  <!-- Top Table Facet -->
+  <polygon points="22,19 42,19 37,27 27,27" fill="#FFFFFF" />
+  
+  <!-- Top Left and Right Corner Facets -->
+  <polygon points="13,27 22,19 27,27" fill="#E2E8F0" />
+  <polygon points="42,19 51,27 37,27" fill="#CBD5E1" />
+  
+  <!-- Center Crown Facets -->
+  <polygon points="13,27 27,27 32,30" fill="#94A3B8" />
+  <polygon points="27,27 37,27 32,30" fill="#F8FAFC" />
+  <polygon points="37,27 51,27 32,30" fill="#64748B" />
+  
+  <!-- Lower Pavilion Triangular Facets converging to bottom tip (32, 49) -->
+  <polygon points="13,27 32,30 23,45" fill="#475569" />
+  <polygon points="23,45 32,30 32,49" fill="#94A3B8" />
+  <polygon points="32,30 41,45 32,49" fill="#CBD5E1" />
+  <polygon points="32,30 51,27 41,45" fill="#334155" />
+  
+  <!-- Crisp Outer Contour Highlight -->
+  <polyline points="13,27 22,19 42,19 51,27 32,49 13,27" stroke="rgba(255,255,255,0.7)" stroke-width="1" stroke-linejoin="round" />
+  
+  <!-- Micro Star Accent Sparkle -->
+  <circle cx="22" cy="19" r="1.5" fill="#38BDF8" />
+</svg>
