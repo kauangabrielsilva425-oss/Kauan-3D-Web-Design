@@ -143,11 +143,11 @@ export const Spatial3DShowcaseSection: React.FC<Spatial3DShowcaseProps> = ({
         const center = box.getCenter(new THREE.Vector3());
         model.position.sub(center);
 
-        // Normalize scale and camera distance (matching script.js)
+        // Normalize scale and camera distance (matching script.js with portrait mobile calibration)
         const size = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
         const isMobileInit = window.innerWidth < 768;
-        camera.position.z = maxDim * (isMobileInit ? 2.15 : 1.7);
+        camera.position.z = maxDim * (isMobileInit ? 3.1 : 1.7);
 
         model.scale.set(0, 0, 0);
         model.rotation.set(0, 0.5, 0);
@@ -189,6 +189,13 @@ export const Spatial3DShowcaseSection: React.FC<Spatial3DShowcaseProps> = ({
       const w = window.innerWidth;
       const h = window.innerHeight;
       camera.aspect = w / h;
+      const isMob = w < 768;
+      if (modelRef.current) {
+        const box = new THREE.Box3().setFromObject(modelRef.current);
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        camera.position.z = maxDim * (isMob ? 3.1 : 1.7);
+      }
       camera.updateProjectionMatrix();
       renderer.setPixelRatio(getPixelRatio());
       renderer.setSize(w, h);
@@ -268,11 +275,11 @@ export const Spatial3DShowcaseSection: React.FC<Spatial3DShowcaseProps> = ({
               SPACES FOR
             </h1>
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 my-1 sm:my-2">
-              <h1 className="text-[14vw] sm:text-[13vw] md:text-[11vw] font-normal uppercase leading-[0.85] tracking-tighter text-white font-['Anton',sans-serif]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-6 my-1 sm:my-2">
+              <h1 className="text-[13vw] sm:text-[13vw] md:text-[11vw] font-normal uppercase leading-[0.85] tracking-tighter text-white font-['Anton',sans-serif]">
                 FUTURE
               </h1>
-              <p className="max-w-xs text-xs sm:text-sm uppercase tracking-wider text-zinc-400 font-mono leading-relaxed pr-6">
+              <p className="max-w-xs text-[11px] sm:text-sm uppercase tracking-wider text-zinc-400 font-mono leading-relaxed pr-0 sm:pr-6">
                 {t('spatial.stage1_p')}
               </p>
             </div>
@@ -303,8 +310,8 @@ export const Spatial3DShowcaseSection: React.FC<Spatial3DShowcaseProps> = ({
             </span>
           </div>
 
-          {/* Dynamic Cycling Archive List */}
-          <div className="flex flex-col gap-5 sm:gap-7 w-full max-w-4xl select-none">
+          {/* Dynamic Cycling Archive List - Mobile Responsive Hierarchy */}
+          <div className="flex flex-col gap-2.5 sm:gap-7 w-full max-w-4xl select-none">
             {ARCHIVE_ITEMS.map((item, idx) => {
               const isCurrent =
                 idx ===
@@ -316,7 +323,7 @@ export const Spatial3DShowcaseSection: React.FC<Spatial3DShowcaseProps> = ({
               return (
                 <div key={item.name} className="flex flex-col items-center">
                   <h2
-                    className={`text-4xl sm:text-6xl md:text-7xl font-light tracking-tight transition-all duration-300 ${
+                    className={`text-2xl sm:text-5xl md:text-7xl font-light tracking-tight transition-all duration-300 ${
                       isCurrent
                         ? 'text-white scale-105 drop-shadow-[0_0_30px_rgba(255,255,255,0.4)]'
                         : 'text-zinc-600/70 scale-95'
@@ -324,7 +331,7 @@ export const Spatial3DShowcaseSection: React.FC<Spatial3DShowcaseProps> = ({
                   >
                     {item.name}
                   </h2>
-                  <div className="flex items-center justify-center gap-3 sm:gap-6 mt-1 text-[10px] sm:text-xs font-mono uppercase tracking-wider text-zinc-500">
+                  <div className="flex items-center justify-center gap-2 sm:gap-6 mt-0.5 sm:mt-1 text-[9px] sm:text-xs font-mono uppercase tracking-wider text-zinc-500">
                     {item.info.map((inf, iIdx) => (
                       <span key={iIdx} className={isCurrent ? 'text-zinc-300' : ''}>
                         {inf}

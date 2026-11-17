@@ -211,7 +211,7 @@ export const WebDesignAiEngineerSection: React.FC<WebDesignAiEngineerSectionProp
         <span className="text-[11px] sm:text-xs font-mono uppercase tracking-[0.3em] text-zinc-500 block mb-4">
           // 02 | {language === 'EN' ? 'AI ENGINEERING & WEB DESIGN' : language === 'ES' ? 'INGENIERÍA DE IA & DISEÑO WEB' : 'ENGENHARIA DE IA & WEB DESIGN'}
         </span>
-        <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight text-white mb-6 uppercase">
+        <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight text-white mb-4 sm:mb-6 uppercase">
           {language === 'EN'
             ? 'Sensory Interfaces & Autonomous Agents'
             : language === 'ES'
@@ -305,14 +305,21 @@ const PureVideoScreenItem: React.FC<PureVideoScreenItemProps> = ({
     };
   }, [screen.videoSrc]);
 
+  // Scale down initial 3D displacement on mobile so cards stay within screen boundaries
+  const isClient = typeof window !== 'undefined';
+  const isMobile = isClient && window.innerWidth < 768;
+  const startX = isMobile ? screen.startPos.x * 0.25 : screen.startPos.x;
+  const startY = isMobile ? screen.startPos.y * 0.35 : screen.startPos.y;
+  const startZ = isMobile ? screen.startPos.z * 0.4 : screen.startPos.z;
+
   return (
     <motion.div
       // RafxVision 3D Arrival: Swooping smoothly into view from 3D perspective wings and locking 100% flat
       initial={{
         opacity: 0,
-        x: screen.startPos.x,
-        y: screen.startPos.y,
-        z: screen.startPos.z,
+        x: startX,
+        y: startY,
+        z: startZ,
         rotateX: screen.startPos.rotateX,
         rotateY: screen.startPos.rotateY,
         rotateZ: screen.startPos.rotateZ,

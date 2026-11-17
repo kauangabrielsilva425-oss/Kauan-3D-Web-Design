@@ -185,7 +185,7 @@ export const ProposalInquirySection: React.FC<ProposalInquirySectionProps> = ({ 
                       : 'PREENCHA O FORMULÁRIO PARA SOLICITAR UM ORÇAMENTO:'}
                   </span>
 
-                  {/* Inputs Row 1: Name and Email */}
+                  {/* Inputs Row 1: Name and Email - 16px text-base on mobile prevents iOS Safari auto-zoom */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                     <input
                       type="text"
@@ -193,7 +193,7 @@ export const ProposalInquirySection: React.FC<ProposalInquirySectionProps> = ({ 
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder={language === 'EN' ? 'Your Name *' : language === 'ES' ? 'Tu Nombre *' : 'Seu Nome *'}
-                      className="w-full bg-[#121214] border border-white/[0.08] focus:border-white/35 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none transition-colors"
+                      className="w-full min-h-[46px] bg-[#121214] border border-white/[0.08] focus:border-white/35 rounded-xl px-4 py-3 text-base sm:text-sm text-white placeholder-zinc-500 focus:outline-none transition-colors"
                     />
 
                     <input
@@ -202,7 +202,7 @@ export const ProposalInquirySection: React.FC<ProposalInquirySectionProps> = ({ 
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder={language === 'EN' ? 'E-mail *' : language === 'ES' ? 'E-mail *' : 'E-mail *'}
-                      className="w-full bg-[#121214] border border-white/[0.08] focus:border-white/35 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none transition-colors"
+                      className="w-full min-h-[46px] bg-[#121214] border border-white/[0.08] focus:border-white/35 rounded-xl px-4 py-3 text-base sm:text-sm text-white placeholder-zinc-500 focus:outline-none transition-colors"
                     />
                   </div>
 
@@ -214,7 +214,7 @@ export const ProposalInquirySection: React.FC<ProposalInquirySectionProps> = ({ 
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder={language === 'EN' ? 'Phone / WhatsApp *' : language === 'ES' ? 'Teléfono / WhatsApp *' : 'Telefone *'}
-                      className="w-full bg-[#121214] border border-white/[0.08] focus:border-white/35 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none transition-colors"
+                      className="w-full min-h-[46px] bg-[#121214] border border-white/[0.08] focus:border-white/35 rounded-xl px-4 py-3 text-base sm:text-sm text-white placeholder-zinc-500 focus:outline-none transition-colors"
                     />
                   </div>
 
@@ -226,7 +226,7 @@ export const ProposalInquirySection: React.FC<ProposalInquirySectionProps> = ({ 
                       value={projectDetails}
                       onChange={(e) => setProjectDetails(e.target.value)}
                       placeholder={language === 'EN' ? 'Tell me about your project *' : language === 'ES' ? 'Cuénteme sobre su proyecto *' : 'Conte-me sobre o seu projeto *'}
-                      className="w-full bg-[#121214] border border-white/[0.08] focus:border-white/35 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none transition-colors resize-none leading-relaxed"
+                      className="w-full bg-[#121214] border border-white/[0.08] focus:border-white/35 rounded-xl px-4 py-3 text-base sm:text-sm text-white placeholder-zinc-500 focus:outline-none transition-colors resize-none leading-relaxed"
                     />
                   </div>
 

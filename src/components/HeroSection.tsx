@@ -115,8 +115,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onContactClick }) => {
         </motion.div>
       </div>
 
-      {/* Layer 3: Centered 3D Character with Eye Tracking */}
-      <div className="absolute left-1/2 -translate-x-1/2 z-10 w-[305px] sm:w-[365px] md:w-[415px] lg:w-[460px] xl:w-[490px] top-[30%] sm:top-[28%] md:top-[25%] lg:top-[23%] translate-y-[45px] sm:translate-y-[55px] md:translate-y-[62px] pointer-events-auto">
+      {/* Layer 3: Centered 3D Character with Eye Tracking - Mobile-First Precision Scale */}
+      <div className="absolute left-1/2 -translate-x-1/2 z-10 w-[220px] sm:w-[320px] md:w-[415px] lg:w-[460px] xl:w-[490px] top-[28%] sm:top-[28%] md:top-[25%] lg:top-[23%] translate-y-[20px] sm:translate-y-[45px] md:translate-y-[62px] pointer-events-auto">
         <FadeIn delay={0.3} y={20} duration={0.9} className="w-full flex justify-center">
           <InteractiveCharacter className="w-full" />
         </FadeIn>
@@ -134,7 +134,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onContactClick }) => {
           </span>
         </div>
 
-        {/* Right: High-Converting International Elite CTA Button (Pure Platinum Monochrome) */}
+        {/* Right: High-Converting International Elite CTA Button (Pure Platinum Monochrome - Min 44px Touch Target) */}
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <Magnet strength={3.5} padding={100}>
             <motion.button
@@ -142,7 +142,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onContactClick }) => {
               onClick={onContactClick}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.96 }}
-              className="group relative inline-flex items-center justify-center gap-2.5 px-6 sm:px-8 py-3.5 sm:py-4 rounded-full bg-white text-black font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-[0_0_35px_rgba(255,255,255,0.25)] hover:shadow-[0_0_50px_rgba(255,255,255,0.5)] hover:bg-zinc-200 hover:text-black transition-all duration-300 cursor-pointer select-none"
+              className="w-full sm:w-auto min-h-[48px] group relative inline-flex items-center justify-center gap-2.5 px-6 sm:px-8 py-3.5 sm:py-4 rounded-full bg-white text-black font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-[0_0_35px_rgba(255,255,255,0.25)] hover:shadow-[0_0_50px_rgba(255,255,255,0.5)] hover:bg-zinc-200 hover:text-black transition-all duration-300 cursor-pointer select-none"
             >
               <span>{t('hero.cta')}</span>
               <span className="w-1.5 h-1.5 rounded-full bg-current transition-transform duration-300 group-hover:scale-150" />
