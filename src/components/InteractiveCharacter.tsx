@@ -60,6 +60,7 @@ export const InteractiveCharacter: React.FC<InteractiveCharacterProps> = ({
   // Organic Brush Trail Reveal state & refs
   const stampsRef = useRef<Stamp[]>([]);
   const lastPointRef = useRef<{ x: number; y: number } | null>(null);
+  const requestRenderRef = useRef<(() => void) | null>(null);
 
   // Offscreen canvases
   const maskCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -118,6 +119,7 @@ export const InteractiveCharacter: React.FC<InteractiveCharacterProps> = ({
     if (lastPointRef.current === null) {
       stampsRef.current.push(createBlobStamp(canvasX, canvasY, baseR));
       lastPointRef.current = { x: canvasX, y: canvasY };
+      requestRenderRef.current?.();
       return;
     }
 
@@ -134,9 +136,11 @@ export const InteractiveCharacter: React.FC<InteractiveCharacterProps> = ({
         stampsRef.current.push(createBlobStamp(ix, iy, baseR));
       }
       lastPointRef.current = { x: canvasX, y: canvasY };
+      requestRenderRef.current?.();
     } else if (dist > 3 * dpr) {
       stampsRef.current.push(createBlobStamp(canvasX, canvasY, baseR));
       lastPointRef.current = { x: canvasX, y: canvasY };
+      requestRenderRef.current?.();
     }
   };
 
@@ -262,12 +266,19 @@ export const InteractiveCharacter: React.FC<InteractiveCharacterProps> = ({
     window.addEventListener('pointerleave', onPointerLeaveWindow);
 
     // =========================================================================
-    // Composite Operations RequestAnimationFrame Loop
+    // Composite Operations RequestAnimationFrame Loop (On-Demand Rendering)
     // =========================================================================
+    let wasActive = true;
+    const requestRenderIfNeeded = () => {
+      if (!animFrameIdRef.current) {
+        animFrameIdRef.current = requestAnimationFrame(render);
+      }
+    };
+
     const render = (time: number) => {
       const canvas = canvasRef.current;
       if (!canvas) {
-        animFrameIdRef.current = requestAnimationFrame(render);
+        animFrameIdRef.current = 0;
         return;
       }
 
@@ -280,7 +291,7 @@ export const InteractiveCharacter: React.FC<InteractiveCharacterProps> = ({
       const w = canvas.width;
       const h = canvas.height;
       if (w === 0 || h === 0) {
-        animFrameIdRef.current = requestAnimationFrame(render);
+        animFrameIdRef.current = 0;
         return;
       }
 
@@ -293,34 +304,6 @@ export const InteractiveCharacter: React.FC<InteractiveCharacterProps> = ({
         }
       }
       stampsRef.current = activeStamps;
-
-      // 1. Draw Organic Mask onto maskCanvas
-      maskCtx.clearRect(0, 0, w, h);
-      if (activeStamps.length > 0) {
-        maskCtx.fillStyle = '#000000';
-        for (let i = 0; i < activeStamps.length; i++) {
-          const stamp = activeStamps[i];
-          const elapsed = time - stamp.createdAt;
-          const progress = elapsed / LIFE;
-
-          // Lifetime curve: First 25% full size (scale 1.0); remaining 75% smoothly shrinks to 0
-          let scale = 1.0;
-          if (progress > 0.25) {
-            const fade = (progress - 0.25) / 0.75;
-            scale = Math.max(0, 1.0 - Math.pow(fade, 1.3));
-          }
-          if (scale <= 0.01) continue;
-
-          for (let j = 0; j < stamp.circles.length; j++) {
-            const c = stamp.circles[j];
-            const r = c.radius * scale;
-            if (r <= 0.5) continue;
-            maskCtx.beginPath();
-            maskCtx.arc(stamp.x + c.dx * scale, stamp.y + c.dy * scale, r, 0, Math.PI * 2);
-            maskCtx.fill();
-          }
-        }
-      }
 
       // Perfectly aligned centered drawing parameters
       const imgW = imgBase.naturalWidth || ORIGINAL_WIDTH;
@@ -343,35 +326,75 @@ export const InteractiveCharacter: React.FC<InteractiveCharacterProps> = ({
         drawY = (h - drawH) / 2;
       }
 
+      // If no stamps are active, draw base image once and sleep RAF loop (0% idle CPU)
+      if (activeStamps.length === 0) {
+        if (wasActive) {
+          ctx.clearRect(0, 0, w, h);
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.drawImage(imgBase, drawX, drawY, drawW, drawH);
+          wasActive = false;
+        }
+        animFrameIdRef.current = 0;
+        return;
+      }
+
+      wasActive = true;
+
+      // 1. Draw Organic Mask onto maskCanvas
+      maskCtx.clearRect(0, 0, w, h);
+      maskCtx.fillStyle = '#000000';
+      for (let i = 0; i < activeStamps.length; i++) {
+        const stamp = activeStamps[i];
+        const elapsed = time - stamp.createdAt;
+        const progress = elapsed / LIFE;
+
+        // Lifetime curve: First 25% full size (scale 1.0); remaining 75% smoothly shrinks to 0
+        let scale = 1.0;
+        if (progress > 0.25) {
+          const fade = (progress - 0.25) / 0.75;
+          scale = Math.max(0, 1.0 - Math.pow(fade, 1.3));
+        }
+        if (scale <= 0.01) continue;
+
+        for (let j = 0; j < stamp.circles.length; j++) {
+          const c = stamp.circles[j];
+          const r = c.radius * scale;
+          if (r <= 0.5) continue;
+          maskCtx.beginPath();
+          maskCtx.arc(stamp.x + c.dx * scale, stamp.y + c.dy * scale, r, 0, Math.PI * 2);
+          maskCtx.fill();
+        }
+      }
+
       // Step 1: Desenhe a imagem base (sem óculos) no canvas principal
       ctx.clearRect(0, 0, w, h);
       ctx.globalCompositeOperation = 'source-over';
       ctx.drawImage(imgBase, drawX, drawY, drawW, drawH);
 
-      if (activeStamps.length > 0) {
-        // Step 2: Use globalCompositeOperation = "destination-out" com o canvas mask para apagar temporariamente a imagem base
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.drawImage(maskCanvas, 0, 0);
+      // Step 2: Use globalCompositeOperation = "destination-out" com o canvas mask para apagar temporariamente a imagem base
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.drawImage(maskCanvas, 0, 0);
 
-        // Step 3: No canvas buf, desenhe o mask e use globalCompositeOperation = "source-in" para desenhar a imagem com óculos
-        bufCtx.clearRect(0, 0, w, h);
-        bufCtx.globalCompositeOperation = 'source-over';
-        bufCtx.drawImage(maskCanvas, 0, 0);
+      // Step 3: No canvas buf, desenhe o mask e use globalCompositeOperation = "source-in" para desenhar a imagem com óculos
+      bufCtx.clearRect(0, 0, w, h);
+      bufCtx.globalCompositeOperation = 'source-over';
+      bufCtx.drawImage(maskCanvas, 0, 0);
 
-        bufCtx.globalCompositeOperation = 'source-in';
-        bufCtx.drawImage(imgGlasses, drawX, drawY, drawW, drawH);
+      bufCtx.globalCompositeOperation = 'source-in';
+      bufCtx.drawImage(imgGlasses, drawX, drawY, drawW, drawH);
 
-        // Step 4: Desenhe o buf por cima do canvas principal com source-over
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.drawImage(bufCanvas, 0, 0);
-      }
+      // Step 4: Desenhe o buf por cima do canvas principal com source-over
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.drawImage(bufCanvas, 0, 0);
 
       animFrameIdRef.current = requestAnimationFrame(render);
     };
 
+    requestRenderRef.current = requestRenderIfNeeded;
     animFrameIdRef.current = requestAnimationFrame(render);
 
     return () => {
+      requestRenderRef.current = null;
       cancelAnimationFrame(animFrameIdRef.current);
       resizeObserver.disconnect();
       window.removeEventListener('resize', onWindowResize);

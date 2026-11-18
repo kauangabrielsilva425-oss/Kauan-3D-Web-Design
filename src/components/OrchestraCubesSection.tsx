@@ -97,14 +97,15 @@ export const OrchestraCubesSection: React.FC = () => {
           cubesContainerRef.current.style.opacity = `${cubesOpacityProgress}`;
         }
 
-        // Header 1: Scales up, blurs, and fades out
+        // Header 1: Scales up, blurs, and fades out (filter blur disabled on mobile to prevent WebKit jank)
+        const isMobile = window.innerWidth < 768;
         const header1Progress = Math.min(self.progress * 2.4, 1);
         if (header1Ref.current) {
           const scale = interpolate(1, 1.4, header1Progress);
-          const blur = interpolate(0, 18, header1Progress);
+          const blur = isMobile ? 0 : interpolate(0, 18, header1Progress);
           const opacity = 1 - header1Progress;
           header1Ref.current.style.transform = `translate(-50%, -50%) scale(${scale})`;
-          header1Ref.current.style.filter = `blur(${blur}px)`;
+          if (!isMobile) header1Ref.current.style.filter = `blur(${blur}px)`;
           header1Ref.current.style.opacity = `${opacity}`;
         }
 
@@ -113,9 +114,9 @@ export const OrchestraCubesSection: React.FC = () => {
         const header2Progress = Math.max(0, Math.min(header2StartProgress, 1));
         if (header2Ref.current) {
           const scale = interpolate(0.8, 1, header2Progress);
-          const blur = interpolate(14, 0, header2Progress);
+          const blur = isMobile ? 0 : interpolate(14, 0, header2Progress);
           header2Ref.current.style.transform = `translate(-50%, -50%) scale(${scale})`;
-          header2Ref.current.style.filter = `blur(${blur}px)`;
+          if (!isMobile) header2Ref.current.style.filter = `blur(${blur}px)`;
           header2Ref.current.style.opacity = `${header2Progress}`;
         }
 
@@ -252,10 +253,10 @@ export const OrchestraCubesSection: React.FC = () => {
         ref={stickyRef}
         className="relative w-full h-screen overflow-hidden bg-[#000000] flex items-center justify-center select-none"
       >
-        {/* Subtle Ambient Space Backlights */}
+        {/* Subtle Ambient Space Backlights (Optimized Hardware Radial Gradients) */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden [clip-path:inset(0)]">
-          <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-full max-w-[700px] h-[500px] bg-white/[0.01] rounded-full blur-[170px]" />
-          <div className="absolute top-1/2 right-1/4 translate-x-1/2 -translate-y-1/2 w-full max-w-[650px] h-[500px] bg-white/[0.01] rounded-full blur-[160px]" />
+          <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-full max-w-[700px] h-[500px] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.015)_0%,transparent_70%)]" />
+          <div className="absolute top-1/2 right-1/4 translate-x-1/2 -translate-y-1/2 w-full max-w-[650px] h-[500px] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.015)_0%,transparent_70%)]" />
         </div>
 
         {/* 6 3D Spatial Cubes with 36 Real Visual Faces */}

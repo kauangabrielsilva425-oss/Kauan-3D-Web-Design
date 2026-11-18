@@ -60,10 +60,10 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
       id="services"
       className="bg-[#000000] text-[#F8FAFC] px-4 sm:px-6 md:px-10 py-20 sm:py-28 md:py-36 relative z-10 [overflow-x:clip]"
     >
-      {/* Subtle Ambient Radial Backlight */}
+      {/* Subtle Ambient Radial Backlight (Hardware Radial Gradient) */}
       <motion.div
         style={{ y: ambientGlowY }}
-        className="absolute top-[20%] left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[500px] bg-white/[0.01] rounded-full blur-[160px] pointer-events-none [clip-path:inset(0)]"
+        className="absolute top-[20%] left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[500px] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.015)_0%,transparent_70%)] pointer-events-none [clip-path:inset(0)]"
       />
 
       <div className="max-w-6xl mx-auto w-full relative z-10">

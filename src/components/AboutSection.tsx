@@ -164,8 +164,8 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onContactClick }) =>
         style={{ y: backgroundParallaxY }}
         className="absolute inset-0 pointer-events-none overflow-hidden [clip-path:inset(0)] max-w-full"
       >
-        <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-full max-w-[700px] h-[550px] bg-white/[0.01] rounded-full blur-[160px]" />
-        <div className="absolute top-[20%] right-[10%] w-full max-w-[450px] h-[450px] bg-white/[0.01] rounded-full blur-[140px]" />
+        <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-full max-w-[700px] h-[550px] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.015)_0%,transparent_70%)]" />
+        <div className="absolute top-[20%] right-[10%] w-full max-w-[450px] h-[450px] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.015)_0%,transparent_70%)]" />
       </motion.div>
 
       {/* Main Container */}
@@ -316,9 +316,9 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onContactClick }) =>
           <FadeIn delay={0.2} y={25} duration={0.8}>
             <div className="relative w-full overflow-hidden [clip-path:inset(0)]">
               
-              {/* Subtle background ambient glows on pure black */}
-              <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-full max-w-[500px] h-[400px] bg-white/[0.01] rounded-full blur-[140px] pointer-events-none" />
-              <div className="absolute top-1/2 right-1/4 translate-x-1/4 -translate-y-1/2 w-full max-w-[450px] h-[450px] bg-white/[0.01] rounded-full blur-[140px] pointer-events-none" />
+              {/* Subtle background ambient glows on pure black (Hardware Radial Gradients) */}
+              <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-full max-w-[500px] h-[400px] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.015)_0%,transparent_70%)] pointer-events-none" />
+              <div className="absolute top-1/2 right-1/4 translate-x-1/4 -translate-y-1/2 w-full max-w-[450px] h-[450px] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.015)_0%,transparent_70%)] pointer-events-none" />
 
               <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
                 

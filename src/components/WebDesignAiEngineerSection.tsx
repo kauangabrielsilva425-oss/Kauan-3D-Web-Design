@@ -272,36 +272,39 @@ const PureVideoScreenItem: React.FC<PureVideoScreenItemProps> = ({
   index,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Guarantee continuous 24/7 video playback without requiring hover
+  // Play ONLY when visible in viewport, pause when off-screen to preserve 60 FPS on mobile (iPhone 12)
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
+    const container = containerRef.current;
+    if (!video || !container) return;
 
     video.muted = true;
     video.defaultMuted = true;
     video.playsInline = true;
 
-    const playVideo = () => {
-      if (video.paused) {
-        video.play().catch(() => {});
-      }
-    };
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            if (video.paused) {
+              video.play().catch(() => {});
+            }
+          } else {
+            if (!video.paused) {
+              video.pause();
+            }
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
 
-    playVideo();
-
-    video.addEventListener('loadedmetadata', playVideo);
-    video.addEventListener('loadeddata', playVideo);
-    video.addEventListener('canplay', playVideo);
-    video.addEventListener('canplaythrough', playVideo);
-    video.addEventListener('pause', playVideo); // Automatically resume if browser pauses
+    observer.observe(container);
 
     return () => {
-      video.removeEventListener('loadedmetadata', playVideo);
-      video.removeEventListener('loadeddata', playVideo);
-      video.removeEventListener('canplay', playVideo);
-      video.removeEventListener('canplaythrough', playVideo);
-      video.removeEventListener('pause', playVideo);
+      observer.disconnect();
     };
   }, [screen.videoSrc]);
 
@@ -314,6 +317,7 @@ const PureVideoScreenItem: React.FC<PureVideoScreenItemProps> = ({
 
   return (
     <motion.div
+      ref={containerRef}
       // RafxVision 3D Arrival: Swooping smoothly into view from 3D perspective wings and locking 100% flat
       initial={{
         opacity: 0,

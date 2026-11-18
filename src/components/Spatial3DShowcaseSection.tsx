@@ -78,19 +78,18 @@ export const Spatial3DShowcaseSection: React.FC<Spatial3DShowcaseProps> = ({
     // 2. High-Performance WebGL Renderer (ACES Filmic Tone Mapping Exposure 2.4)
     const getPixelRatio = () =>
       window.innerWidth < 768
-        ? Math.min(window.devicePixelRatio || 1, 1.5)
+        ? Math.min(window.devicePixelRatio || 1, 1.35)
         : Math.min(window.devicePixelRatio || 1, 2);
 
     const renderer = new THREE.WebGLRenderer({
-      antialias: true,
+      antialias: window.innerWidth >= 768,
       alpha: true,
       powerPreference: 'high-performance',
     });
     renderer.setClearColor(0x000000, 0);
     renderer.setSize(width, height);
     renderer.setPixelRatio(getPixelRatio());
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.enabled = false;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 2.4;
 
@@ -104,7 +103,6 @@ export const Spatial3DShowcaseSection: React.FC<Spatial3DShowcaseProps> = ({
 
     const mainLight = new THREE.DirectionalLight(0xffffff, 7.5);
     mainLight.position.set(0.5, 7.5, 2.5);
-    mainLight.castShadow = true;
     scene.add(mainLight);
 
     const fillLight = new THREE.DirectionalLight(0xffffff, 2.5);
@@ -205,8 +203,25 @@ export const Spatial3DShowcaseSection: React.FC<Spatial3DShowcaseProps> = ({
     };
     window.addEventListener('resize', onResize);
 
-    // 7. Continuous 60 FPS Render Loop with Sinusoidal Levitation + Exact Original Scroll Tumbling
+    // 7. Continuous 60 FPS Render Loop (active only when section is visible in viewport)
+    let isVisible = true;
+    const visibilityObserver = new IntersectionObserver(
+      ([entry]) => {
+        isVisible = entry.isIntersecting;
+        if (isVisible && !animId) {
+          animId = requestAnimationFrame(animate);
+        }
+      },
+      { rootMargin: '300px 0px' }
+    );
+    visibilityObserver.observe(section);
+
     const animate = () => {
+      if (!isVisible) {
+        animId = 0;
+        return;
+      }
+
       targetScrollProgress = computeProgress();
       smoothScrollProgress += (targetScrollProgress - smoothScrollProgress) * 0.18;
 
@@ -235,6 +250,7 @@ export const Spatial3DShowcaseSection: React.FC<Spatial3DShowcaseProps> = ({
 
     return () => {
       cancelAnimationFrame(animId);
+      visibilityObserver.disconnect();
       window.removeEventListener('resize', onResize);
       renderer.dispose();
       mount.innerHTML = '';
@@ -257,9 +273,9 @@ export const Spatial3DShowcaseSection: React.FC<Spatial3DShowcaseProps> = ({
           className="absolute inset-0 z-10 pointer-events-none w-full h-full"
         />
 
-        {/* Ambient Vignette & Space Lighting */}
+        {/* Ambient Vignette & Space Lighting (Optimized Hardware Radial Gradient) */}
         <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden [clip-path:inset(0)]">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[700px] h-[500px] bg-[#38BDF8]/05 rounded-full blur-[160px]" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[700px] h-[500px] bg-[radial-gradient(ellipse_at_center,rgba(56,189,248,0.08)_0%,transparent_70%)]" />
         </div>
 
         {/* =========================================================================

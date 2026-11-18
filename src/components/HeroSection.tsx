@@ -84,8 +84,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onContactClick }) => {
         style={{ y: bgGlowY }}
         className="absolute inset-0 pointer-events-none z-0 overflow-hidden [clip-path:inset(0)]"
       >
-        {/* Subtle monochrome silver depth backlight */}
-        <div className="absolute top-[8%] left-1/2 -translate-x-1/2 w-full max-w-[880px] h-[480px] bg-white/[0.015] rounded-full blur-[160px]" />
+        {/* Subtle monochrome silver depth backlight (Hardware Radial Gradient) */}
+        <div className="absolute top-[8%] left-1/2 -translate-x-1/2 w-full max-w-[880px] h-[480px] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)]" />
         {/* Deep pure black vignette */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.98)_100%)]" />
       </motion.div>

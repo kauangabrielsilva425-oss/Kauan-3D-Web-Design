@@ -78,15 +78,16 @@ export const App: React.FC = () => {
     window.gsap = gsap;
     window.ScrollTrigger = ScrollTrigger;
 
-    // 1. Initialize Lenis High-Performance Smooth Scroll
+    // 1. Initialize Lenis High-Performance Smooth Scroll (Calibrated for Mobile 60-120Hz & Desktop Velvet)
+    const isMobileDevice = typeof window !== 'undefined' && window.innerWidth < 768;
     const lenis = new Lenis({
-      duration: 1.7,
+      duration: isMobileDevice ? 1.0 : 1.7,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       orientation: 'vertical',
       gestureOrientation: 'vertical',
       smoothWheel: true,
-      wheelMultiplier: 0.95,
-      touchMultiplier: 1.3,
+      syncTouch: false,
+      touchMultiplier: 1.0,
       infinite: false,
     });
 
@@ -95,12 +96,12 @@ export const App: React.FC = () => {
     // 2. Synchronize Lenis scroll updates with GSAP ScrollTrigger
     lenis.on('scroll', ScrollTrigger.update);
 
-    // 3. Connect Lenis RAF directly to GSAP's internal ticker
+    // 3. Connect Lenis RAF directly to GSAP's internal ticker with intelligent lag smoothing
     const updateTicker = (time: number) => {
       lenis.raf(time * 1000);
     };
     gsap.ticker.add(updateTicker);
-    gsap.ticker.lagSmoothing(0);
+    gsap.ticker.lagSmoothing(500, 33);
 
     // 4. Force a fresh ScrollTrigger calculation after initial paint
     ScrollTrigger.refresh();
