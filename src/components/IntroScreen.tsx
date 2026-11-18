@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
 interface IntroScreenProps {
@@ -6,23 +6,35 @@ interface IntroScreenProps {
   durationSeconds?: number;
 }
 
-const COSMOS_ARMS = [
-  // Arm 0: img1 .. img10
+// Desktop: 5 arms x 10 cards = 50 cards (Exact original rich cosmos scale for large displays)
+const COSMOS_ARMS_DESKTOP = [
   Array.from({ length: 10 }, (_, i) => `/intro/img${i + 1}.webp`),
-  // Arm 1: img11 .. img20
   Array.from({ length: 10 }, (_, i) => `/intro/img${i + 11}.webp`),
-  // Arm 2: img10 .. img1
   Array.from({ length: 10 }, (_, i) => `/intro/img${10 - i}.webp`),
-  // Arm 3: img20 .. img11
   Array.from({ length: 10 }, (_, i) => `/intro/img${20 - i}.webp`),
-  // Arm 4: img11 .. img20
   Array.from({ length: 10 }, (_, i) => `/intro/img${i + 11}.webp`),
+];
+
+// Mobile: 5 arms x 4 cards = 20 unique cards (img1..img20, 60 FPS GPU-accelerated, zero edge clipping)
+const COSMOS_ARMS_MOBILE = [
+  ['/intro/img1.webp', '/intro/img2.webp', '/intro/img3.webp', '/intro/img4.webp'],
+  ['/intro/img5.webp', '/intro/img6.webp', '/intro/img7.webp', '/intro/img8.webp'],
+  ['/intro/img9.webp', '/intro/img10.webp', '/intro/img11.webp', '/intro/img12.webp'],
+  ['/intro/img13.webp', '/intro/img14.webp', '/intro/img15.webp', '/intro/img16.webp'],
+  ['/intro/img17.webp', '/intro/img18.webp', '/intro/img19.webp', '/intro/img20.webp'],
 ];
 
 export const IntroScreen: React.FC<IntroScreenProps> = ({
   onComplete,
   durationSeconds = 1.8,
 }) => {
+  const [isMobile] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 640;
+    }
+    return false;
+  });
+
   useEffect(() => {
     const totalMs = durationSeconds * 1000;
     const timer = setTimeout(() => {
@@ -44,14 +56,16 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({
     };
   }, [durationSeconds, onComplete]);
 
+  const arms = isMobile ? COSMOS_ARMS_MOBILE : COSMOS_ARMS_DESKTOP;
+
   return (
     <motion.div
       initial={{ opacity: 1 }}
       exit={{
         opacity: 0,
         scale: 1.05,
-        filter: typeof window !== 'undefined' && window.innerWidth < 640 ? 'none' : 'blur(14px)',
-        transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] },
+        filter: isMobile ? 'none' : 'blur(14px)',
+        transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] },
       }}
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#000000] overflow-hidden select-none cursor-pointer"
       onClick={onComplete}
@@ -59,10 +73,10 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({
       {/* Dynamic CSS styles: 100% GPU-Accelerated on Mobile for 60-120 FPS; Exact Desktop Geometry Preserved */}
       <style>{`
         :root {
-          --intro-radius: 130px;
-          --intro-card-w: 52px;
-          --intro-card-h: 94px;
-          --intro-card-radius: 8px;
+          --intro-radius: 120px;
+          --intro-card-w: 48px;
+          --intro-card-h: 84px;
+          --intro-card-radius: 7px;
         }
 
         @media (min-width: 640px) {
@@ -99,8 +113,8 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({
           background: #18181b;
           border-radius: var(--intro-card-radius);
           overflow: hidden;
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.9), 0 0 8px rgba(255, 255, 255, 0.05);
-          animation: intro-fall-mobile-gpu 2.4s infinite cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.85), 0 0 6px rgba(255, 255, 255, 0.05);
+          animation: intro-fall-mobile-gpu 1.6s infinite cubic-bezier(0.35, 0, 0.25, 1);
           transform-origin: bottom center;
           transform: scale(0);
           will-change: transform, opacity;
@@ -111,7 +125,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({
         @media (min-width: 640px) {
           .intro-cosmos-item {
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 15px rgba(255, 255, 255, 0.05);
-            animation-name: intro-fall-desktop;
+            animation: intro-fall-desktop 2.4s infinite cubic-bezier(0.4, 0, 0.2, 1);
             will-change: transform, opacity, top, left;
           }
         }
@@ -129,7 +143,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({
         @keyframes intro-fall-mobile-gpu {
           0% {
             opacity: 0;
-            transform: translate3d(0, 0, 0) scale(0.95);
+            transform: translate3d(0, 0, 0) scale(0.90);
           }
           20% {
             opacity: 1;
@@ -137,11 +151,11 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({
           }
           50% {
             opacity: 1;
-            transform: translate3d(0, -59px, 0) scale(1.02);
+            transform: translate3d(0, -48px, 0) scale(1.02);
           }
           100% {
             opacity: 0;
-            transform: translate3d(-90px, -45px, 0) scale(0.1);
+            transform: translate3d(-76px, -36px, 0) scale(0.12);
           }
         }
 
@@ -172,8 +186,8 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({
 
       {/* The 5-arm circular spiral layout */}
       <div className="intro-container">
-        {COSMOS_ARMS.map((armImages, armIdx) => {
-          const total = COSMOS_ARMS.length;
+        {arms.map((armImages, armIdx) => {
+          const total = arms.length;
           const angle = (360 / total) * armIdx;
 
           return (
@@ -186,7 +200,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({
                 <div
                   key={itemIdx}
                   className="intro-cosmos-item"
-                  style={{ animationDelay: `${itemIdx * 0.18}s` }}
+                  style={{ animationDelay: `${itemIdx * (isMobile ? 0.20 : 0.18)}s` }}
                 >
                   <img src={src} alt="" loading="eager" decoding="async" />
                 </div>
