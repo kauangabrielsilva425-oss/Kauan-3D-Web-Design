@@ -46,6 +46,34 @@ const CUBES_CONFIG: Record<string, CubeData> = {
   },
 };
 
+// Calibrated perimeter positions for mobile portrait screens (opens up clean central reading space)
+const CUBES_CONFIG_MOBILE: Record<string, CubeData> = {
+  'cube-1': {
+    initial: { top: -55, left: 37.5, rotateX: 360, rotateY: -360, rotateZ: -48, z: -30000 },
+    final: { top: 50, left: 11, rotateX: 0, rotateY: 3, rotateZ: 0, z: 0 },
+  },
+  'cube-2': {
+    initial: { top: -35, left: 32.5, rotateX: -360, rotateY: 360, rotateZ: 90, z: -30000 },
+    final: { top: 82, left: 14, rotateX: 1, rotateY: 2, rotateZ: 0, z: 0 },
+  },
+  'cube-3': {
+    initial: { top: -65, left: 50, rotateX: -360, rotateY: -360, rotateZ: -180, z: -30000 },
+    final: { top: 18, left: 14, rotateX: -1, rotateY: 2, rotateZ: 0, z: 0 },
+  },
+  'cube-4': {
+    initial: { top: -35, left: 50, rotateX: -360, rotateY: -360, rotateZ: -180, z: -30000 },
+    final: { top: 82, left: 86, rotateX: 1, rotateY: -2, rotateZ: 0, z: 0 },
+  },
+  'cube-5': {
+    initial: { top: -55, left: 62.5, rotateX: 360, rotateY: 360, rotateZ: -135, z: -30000 },
+    final: { top: 18, left: 86, rotateX: -1, rotateY: -2, rotateZ: 0, z: 0 },
+  },
+  'cube-6': {
+    initial: { top: -35, left: 67.5, rotateX: -180, rotateY: -360, rotateZ: -180, z: -30000 },
+    final: { top: 50, left: 89, rotateX: 0, rotateY: -3, rotateZ: 0, z: 0 },
+  },
+};
+
 const interpolate = (start: number, end: number, progress: number) => {
   return start + (end - start) * progress;
 };
@@ -125,9 +153,12 @@ export const OrchestraCubesSection: React.FC = () => {
         const secondPhaseProgress =
           self.progress >= 0.5 ? Math.min((self.progress - 0.5) * 2.2, 1) : 0;
 
+        const isMob = window.innerWidth < 768;
+        const activeConfig = isMob ? CUBES_CONFIG_MOBILE : CUBES_CONFIG;
+
         cubeElements.forEach((cube, index) => {
           const cubeClass = `cube-${index + 1}`;
-          const data = CUBES_CONFIG[cubeClass];
+          const data = activeConfig[cubeClass];
           if (!data) return;
           const { initial, final } = data;
 
@@ -168,23 +199,27 @@ export const OrchestraCubesSection: React.FC = () => {
         .orchestra-cubes-space {
           position: absolute;
           inset: 0;
+          -webkit-transform-style: preserve-3d;
           transform-style: preserve-3d;
           perspective: 10000px;
           pointer-events: none;
         }
 
         .orchestra-cube {
-          --cube-radius: 16px;
+          --cube-radius: 10px;
+          --cube-half: 36px;
           position: absolute;
-          width: 140px;
-          height: 140px;
+          width: 72px;
+          height: 72px;
+          -webkit-transform-style: preserve-3d;
           transform-style: preserve-3d;
-          will-change: transform, top, left;
+          will-change: transform;
         }
 
         @media (min-width: 768px) {
           .orchestra-cube {
             --cube-radius: 18px;
+            --cube-half: 80px;
             width: 160px;
             height: 160px;
           }
@@ -193,8 +228,10 @@ export const OrchestraCubesSection: React.FC = () => {
         .orchestra-cube > div {
           position: absolute;
           inset: 0;
-          transform-style: preserve-3d;
+          -webkit-backface-visibility: hidden;
           backface-visibility: hidden;
+          -webkit-transform-style: flat;
+          transform-style: flat;
           overflow: hidden;
           background: #09090b;
         }
@@ -203,25 +240,32 @@ export const OrchestraCubesSection: React.FC = () => {
         .face-back {
           border-radius: var(--cube-radius);
           border: 1px solid rgba(255, 255, 255, 0.18);
-          box-shadow: 0 20px 45px rgba(0, 0, 0, 0.95), inset 0 0 20px rgba(255, 255, 255, 0.08);
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.95), inset 0 0 12px rgba(255, 255, 255, 0.08);
+        }
+
+        @media (min-width: 768px) {
+          .face-front,
+          .face-back {
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.95), inset 0 0 20px rgba(255, 255, 255, 0.08);
+          }
         }
 
         .face-top,
         .face-bottom {
           left: var(--cube-radius);
           width: calc(100% - (var(--cube-radius) * 2));
-          border-radius: 4px;
+          border-radius: 3px;
           border: 1px solid rgba(255, 255, 255, 0.04);
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
+          box-shadow: 0 6px 15px rgba(0, 0, 0, 0.85);
         }
 
         .face-left,
         .face-right {
           top: var(--cube-radius);
           height: calc(100% - (var(--cube-radius) * 2));
-          border-radius: 4px;
+          border-radius: 3px;
           border: 1px solid rgba(255, 255, 255, 0.04);
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
+          box-shadow: 0 6px 15px rgba(0, 0, 0, 0.85);
         }
 
         .orchestra-cube img {
@@ -229,29 +273,22 @@ export const OrchestraCubesSection: React.FC = () => {
           height: 100%;
           object-fit: cover;
           display: block;
+          -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
         }
 
-        .face-front  { transform: translateZ(70px); }
-        .face-back   { transform: translateZ(-70px) rotateY(180deg); }
-        .face-right  { transform: translateX(70px) rotateY(90deg); }
-        .face-left   { transform: translateX(-70px) rotateY(-90deg); }
-        .face-top    { transform: translateY(-70px) rotateX(90deg); }
-        .face-bottom { transform: translateY(70px) rotateX(-90deg); }
-
-        @media (min-width: 768px) {
-          .face-front  { transform: translateZ(80px); }
-          .face-back   { transform: translateZ(-80px) rotateY(180deg); }
-          .face-right  { transform: translateX(80px) rotateY(90deg); }
-          .face-left   { transform: translateX(-80px) rotateY(-90deg); }
-          .face-top    { transform: translateY(-80px) rotateX(90deg); }
-          .face-bottom { transform: translateY(80px) rotateX(-90deg); }
-        }
+        .face-front  { -webkit-transform: translateZ(var(--cube-half)); transform: translateZ(var(--cube-half)); }
+        .face-back   { -webkit-transform: translateZ(calc(-1 * var(--cube-half))) rotateY(180deg); transform: translateZ(calc(-1 * var(--cube-half))) rotateY(180deg); }
+        .face-right  { -webkit-transform: translateX(var(--cube-half)) rotateY(90deg); transform: translateX(var(--cube-half)) rotateY(90deg); }
+        .face-left   { -webkit-transform: translateX(calc(-1 * var(--cube-half))) rotateY(-90deg); transform: translateX(calc(-1 * var(--cube-half))) rotateY(-90deg); }
+        .face-top    { -webkit-transform: translateY(calc(-1 * var(--cube-half))) rotateX(90deg); transform: translateY(calc(-1 * var(--cube-half))) rotateX(90deg); }
+        .face-bottom { -webkit-transform: translateY(var(--cube-half)) rotateX(-90deg); transform: translateY(var(--cube-half)) rotateX(-90deg); }
       `}</style>
 
       {/* Sticky Scroll Container */}
       <div
         ref={stickyRef}
-        className="relative w-full h-screen overflow-hidden bg-[#000000] flex items-center justify-center select-none"
+        className="relative w-full h-[100dvh] min-h-screen overflow-hidden bg-[#000000] flex items-center justify-center select-none"
       >
         {/* Subtle Ambient Space Backlights (Optimized Hardware Radial Gradients) */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden [clip-path:inset(0)]">
@@ -283,7 +320,7 @@ export const OrchestraCubesSection: React.FC = () => {
                     <img
                       src={`/cubes/img${f.imgNum}.webp`}
                       alt={`3D cube ${cubeNum} face`}
-                      loading="lazy"
+                      loading="eager"
                       decoding="async"
                       width="180"
                       height="180"
@@ -311,15 +348,15 @@ export const OrchestraCubesSection: React.FC = () => {
         {/* Phase 2 Center Statement: Where Innovation Meets Precision */}
         <div
           ref={header2Ref}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] sm:w-[65%] md:w-[48%] text-center pointer-events-none z-10 opacity-0"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[88%] sm:w-[65%] md:w-[48%] text-center pointer-events-none z-10 opacity-0 px-4 py-5 sm:p-0 rounded-2xl bg-black/60 sm:bg-transparent backdrop-blur-[2px] sm:backdrop-blur-none border border-white/[0.08] sm:border-0 shadow-2xl sm:shadow-none"
         >
-          <span className="text-xs font-mono uppercase tracking-[0.3em] text-zinc-400 block mb-3">
+          <span className="text-[10px] sm:text-xs font-mono uppercase tracking-[0.3em] text-[#38BDF8] block mb-2 sm:mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
             {t('manifesto.h2_badge') || 'KAUAN GABRIEL // APPROACH'}
           </span>
-          <h3 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black uppercase tracking-tight text-white mb-4">
+          <h3 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-black uppercase tracking-tight text-white mb-2 sm:mb-4 drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)]">
             {t('manifesto.h2_title')}
           </h3>
-          <p className="text-sm sm:text-base md:text-lg text-zinc-300 font-light leading-relaxed max-w-xl mx-auto">
+          <p className="text-xs sm:text-base md:text-lg text-zinc-300 font-light leading-relaxed max-w-xl mx-auto drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)]">
             {t('manifesto.h2_desc')}
           </p>
         </div>
