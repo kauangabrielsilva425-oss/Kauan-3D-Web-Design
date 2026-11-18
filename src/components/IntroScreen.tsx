@@ -56,7 +56,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#000000] overflow-hidden select-none cursor-pointer"
       onClick={onComplete}
     >
-      {/* Dynamic CSS styles for the snappy circular cosmos vortex animation (Mobile-First Responsive) */}
+      {/* Dynamic CSS styles for the snappy circular cosmos vortex animation (Exact Desktop Geometry scaled cleanly for mobile) */}
       <style>{`
         .intro-container {
           position: absolute;
@@ -68,17 +68,26 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({
           pointer-events: none;
         }
 
-        .intro-cosmos {
-          position: absolute;
-          width: 64px;
-          height: 116px;
+        .intro-vortex-wrapper {
+          position: relative;
+          width: 0;
+          height: 0;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          transform: scale(0.36);
         }
 
         @media (min-width: 640px) {
-          .intro-cosmos {
-            width: 86px;
-            height: 156px;
+          .intro-vortex-wrapper {
+            transform: scale(1);
           }
+        }
+
+        .intro-cosmos {
+          position: absolute;
+          width: 86px;
+          height: 156px;
         }
 
         .intro-cosmos-item {
@@ -88,21 +97,13 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({
           width: 100%;
           height: 100%;
           background: #18181b;
-          border-radius: 9px;
+          border-radius: 12px;
           overflow: hidden;
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.9), 0 0 12px rgba(255, 255, 255, 0.05);
-          animation: intro-fall-mobile 2.4s infinite cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 15px rgba(255, 255, 255, 0.05);
+          animation: intro-fall-and-disappear 2.4s infinite cubic-bezier(0.4, 0, 0.2, 1);
           transform-origin: bottom center;
           transform: scale(0);
           will-change: transform, opacity, top, left;
-        }
-
-        @media (min-width: 640px) {
-          .intro-cosmos-item {
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 15px rgba(255, 255, 255, 0.05);
-            animation-name: intro-fall-desktop;
-          }
         }
 
         .intro-cosmos-item img {
@@ -112,32 +113,8 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({
           display: block;
         }
 
-        /* Mobile Trajectory: proportional to 390px screens */
-        @keyframes intro-fall-mobile {
-          0% {
-            opacity: 0;
-            top: 0;
-            left: 0;
-            transform: scale(0.95);
-          }
-          20% {
-            opacity: 1;
-            transform: scale(1);
-          }
-          50% {
-            top: -130px;
-            transform: scale(1.02);
-          }
-          100% {
-            top: -100px;
-            left: -150px;
-            transform: scale(0.1);
-            opacity: 0;
-          }
-        }
-
-        /* Desktop Trajectory: exact original scale */
-        @keyframes intro-fall-desktop {
+        /* Exact original spiral fall-and-disappear trajectory */
+        @keyframes intro-fall-and-disappear {
           0% {
             opacity: 0;
             top: 0;
@@ -161,35 +138,33 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({
         }
       `}</style>
 
-
-
       {/* The 5-arm circular spiral layout */}
       <div className="intro-container">
-        {COSMOS_ARMS.map((armImages, armIdx) => {
-          const total = COSMOS_ARMS.length;
-          const angle = (360 / total) * armIdx;
-          const isClient = typeof window !== 'undefined';
-          const isMobile = isClient && window.innerWidth < 640;
-          const transform = `rotate(${angle}deg) translate(${isMobile ? 'clamp(140px, 38vw, 190px)' : '55vh'})`;
+        <div className="intro-vortex-wrapper">
+          {COSMOS_ARMS.map((armImages, armIdx) => {
+            const total = COSMOS_ARMS.length;
+            const angle = (360 / total) * armIdx;
+            const transform = `rotate(${angle}deg) translate(55vh)`;
 
-          return (
-            <div
-              key={armIdx}
-              className="intro-cosmos"
-              style={{ transform }}
-            >
-              {armImages.map((src, itemIdx) => (
-                <div
-                  key={itemIdx}
-                  className="intro-cosmos-item"
-                  style={{ animationDelay: `${itemIdx * 0.18}s` }}
-                >
-                  <img src={src} alt="" loading="eager" />
-                </div>
-              ))}
-            </div>
-          );
-        })}
+            return (
+              <div
+                key={armIdx}
+                className="intro-cosmos"
+                style={{ transform }}
+              >
+                {armImages.map((src, itemIdx) => (
+                  <div
+                    key={itemIdx}
+                    className="intro-cosmos-item"
+                    style={{ animationDelay: `${itemIdx * 0.18}s` }}
+                  >
+                    <img src={src} alt="" loading="eager" />
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Centerpiece Luxury Minimalist Typography - ONLY KAUAN */}
